@@ -1,7 +1,7 @@
-
 package com.fabledzx.boxed;
 
-import net.fabricmc.fabric.api.entity.event.v1.SleepEvents;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
@@ -15,7 +15,13 @@ public class SleepRestrictionHandler {
     private static final int VERTICAL_RADIUS = 5;
 
     public static void register() {
-        SleepEvents.ALLOW_SLEEPING.register((player, sleepingPos) -> {
+        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            if (world.isClient()) return ActionResult.PASS;
+
+            BlockPos pos = hitResult.getBlockPos();
+            BlockState state = world.getBlockState(pos);
+            if (!(state.getBlock() instanceof BedBlock)) return ActionResult.PASS;
+
             if (hasBoxedIronFarmNearby(player)) {
                 player.sendMessage(
                     Text.translatable("block.boxed.cannot_sleep"), true);
