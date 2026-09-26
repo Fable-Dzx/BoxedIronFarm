@@ -1,8 +1,10 @@
-
 package com.fabledzx.boxed;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -22,47 +24,61 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class BoxedStringFarmBlockEntity extends BlockEntity
+public class BoxedIronFarmBlockEntity extends BlockEntity
         implements Inventory, NamedScreenHandlerFactory {
 
     private static final int INVENTORY_SIZE = 5;
-    private static final int PRODUCTION_INTERVAL = 5;   // 每 5 tick
-    private static final int STRING_PER_PRODUCTION = 1;
+    private static final int PRODUCTION_INTERVAL = 600;
+    private static final int IRON_PER_PRODUCTION = 4;
 
     private final DefaultedList<ItemStack> items =
         DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY);
     private int tickCounter = 0;
+    private boolean hasZombie = false;
+    private boolean hasVillager = false;
 
-    public BoxedStringFarmBlockEntity(BlockPos pos, BlockState state) {
-        super(BoxedMod.STRING_FARM_ENTITY, pos, state);
+    public BoxedIronFarmBlockEntity(BlockPos pos, BlockState state) {
+        super(BoxedMod.BOX_ENTITY, pos, state);
     }
 
     public void tick(World world, BlockPos pos, BlockState state) {
         if (world.isClient()) return;
 
-        tickCounter++;
-        if (tickCounter < PRODUCTION_INTERVAL) return;
-        tickCounter = 0;
+        if (hasZombie != state.get(BoxedIronFarmBlock.HAS_ZOMBIE)
+            || hasVillager != state.get(BoxedIronFarmBlock.HAS_VILLAGER)) {
+            world.setBlockState(pos, state
+                .with(BoxedIronFarmBlock.HAS_ZOMBIE, hasZombie)
+                .with(BoxedIronFarmBlock.HAS_VILLAGER, hasVillager));
+        }
 
-        if (!hasSpaceForString()) return;
-        produceString();
-        markDirty();
-        world.updateListeners(pos, state, state, 3);
+        if (!hasZombie || !hasVillager) return;
+        if (!hasSpaceForIron()) return;
+
+        tickCounter++;
+        if (tickCounter >= PRODUCTION_INTERVAL) {
+            tickCounter = 0;
+            produceIron();
+            markDirty();
+            world.updateListeners(pos, state, state, 3);
+        }
     }
 
-    private boolean hasSpaceForString() {
-        for (ItemStack s : items) {
-            if (s.isEmpty()) return true;
-            if (s.isOf(Items.STRING) && s.getCount() < s.getMaxCount()) return true;
+    private boolean hasSpaceForIron() {
+        for (ItemStack stack : items) {
+            if (stack.isEmpty()) return true;
+            if (stack.isOf(Items.IRON_INGOT)
+                && stack.getCount() + IRON_PER_PRODUCTION <= stack.getMaxCount()) {
+                return true;
+            }
         }
         return false;
     }
 
-    private void produceString() {
-        int remaining = STRING_PER_PRODUCTION;
+    private void produceIron() {
+        int remaining = IRON_PER_PRODUCTION;
         for (int i = 0; i < items.size() && remaining > 0; i++) {
             ItemStack s = items.get(i);
-            if (s.isOf(Items.STRING)) {
+            if (s.isOf(Items.IRON_INGOT)) {
                 int space = s.getMaxCount() - s.getCount();
                 int add = Math.min(space, remaining);
                 s.increment(add);
@@ -72,11 +88,32 @@ public class BoxedStringFarmBlockEntity extends BlockEntity
         for (int i = 0; i < items.size() && remaining > 0; i++) {
             if (items.get(i).isEmpty()) {
                 int add = Math.min(64, remaining);
-                items.set(i, new ItemStack(Items.STRING, add));
+                items.set(i, new ItemStack(Items.IRON_INGOT, add));
                 remaining -= add;
             }
         }
     }
+
+    public boolean captureEntity(Entity entity) {
+        if (entity instanceof ZombieEntity && !hasZombie) {
+            hasZombie = true;
+            entity.discard();
+            markDirty();
+            sync();
+            return true;
+        }
+        if (entity instanceof VillagerEntity && !hasVillager) {
+            hasVillager = true;
+            entity.discard();
+            markDirty();
+            sync();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean hasZombie() { return hasZombie; }
+    public boolean hasVillager() { return hasVillager; }
 
     @Override public int size() { return INVENTORY_SIZE; }
     @Override public boolean isEmpty() {
@@ -105,19 +142,21 @@ public class BoxedStringFarmBlockEntity extends BlockEntity
 
     @Override
     public Text getDisplayName() {
-        return Text.translatable("block.boxed.boxed_string_farm");
+        return Text.translatable("block.boxed.boxed_iron_farm");
     }
 
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-        return new BoxedStringFarmScreenHandler(syncId, inv, this);
+        return new BoxedIronFarmScreenHandler(syncId, inv, this);
     }
 
     @Override
     protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
         super.writeNbt(nbt, lookup);
         Inventories.writeNbt(nbt, items, lookup);
+        nbt.putBoolean("HasZombie", hasZombie);
+        nbt.putBoolean("HasVillager", hasVillager);
         nbt.putInt("TickCounter", tickCounter);
     }
 
@@ -125,7 +164,9 @@ public class BoxedStringFarmBlockEntity extends BlockEntity
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
         super.readNbt(nbt, lookup);
         Inventories.readNbt(nbt, items, lookup);
-        tickCounter = nbt.getInt("TickCounter");
+        hasZombie = nbt.getBoolean("HasZombie", false);
+        hasVillager = nbt.getBoolean("HasVillager", false);
+        tickCounter = nbt.getInt("TickCounter", 0);
     }
 
     @Nullable
@@ -137,5 +178,11 @@ public class BoxedStringFarmBlockEntity extends BlockEntity
     @Override
     public NbtCompound toInitialChunkDataNbt(RegistryWrapper.WrapperLookup lookup) {
         return createNbt(lookup);
+    }
+
+    private void sync() {
+        if (world != null && !world.isClient()) {
+            world.updateListeners(pos, getCachedState(), getCachedState(), 3);
+        }
     }
 }
