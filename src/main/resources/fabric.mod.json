@@ -1,0 +1,20 @@
+
+{
+  "schemaVersion": 1,
+  "id": "boxed",
+  "version": "1.0.0",
+  "name": "Boxed Iron Farm",
+  "description": "添加盒装刷铁机与盒装刷线机。",
+  "authors": ["fabledzx"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.fabledzx.boxed.BoxedMod"],
+    "client": ["com.fabledzx.boxed.BoxedModClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "fabric-api": "*",
+    "minecraft": "~1.21.5"
+  }
+}

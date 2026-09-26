@@ -1,0 +1,21 @@
+
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "LLL",
+    "TST",
+    "WHW"
+  ],
+  "key": {
+    "L": "#minecraft:logs",
+    "T": "minecraft:tripwire_hook",
+    "S": "minecraft:string",
+    "W": "minecraft:water_bucket",
+    "H": "minecraft:hopper"
+  },
+  "result": {
+    "id": "boxed:boxed_string_farm",
+    "count": 1
+  }
+}

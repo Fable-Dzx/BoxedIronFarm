@@ -1,0 +1,10 @@
+
+{
+  "block.boxed.empty_box": "Empty Boxed Iron Farm",
+  "block.boxed.zombie_box": "Boxed Iron Farm (Zombie)",
+  "block.boxed.villager_box": "Boxed Iron Farm (Villager)",
+  "block.boxed.full_box": "Boxed Iron Farm",
+  "block.boxed.boxed_iron_farm": "Boxed Iron Farm",
+  "block.boxed.boxed_string_farm": "Boxed String Farm",
+  "block.boxed.cannot_sleep": "The boxed iron farm keeps you uneasy. You can't sleep..."
+}

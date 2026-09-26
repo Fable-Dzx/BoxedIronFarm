@@ -1,0 +1,9 @@
+
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "boxed:block/box_glass",
+    "side": "boxed:block/box_glass",
+    "bottom": "boxed:block/box_stone"
+  }
+}

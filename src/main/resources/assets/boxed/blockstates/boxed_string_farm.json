@@ -1,0 +1,9 @@
+
+{
+  "variants": {
+    "facing=north": { "model": "boxed:block/boxed_string_farm" },
+    "facing=south": { "model": "boxed:block/boxed_string_farm", "y": 180 },
+    "facing=west":  { "model": "boxed:block/boxed_string_farm", "y": 270 },
+    "facing=east":  { "model": "boxed:block/boxed_string_farm", "y": 90 }
+  }
+}

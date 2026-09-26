@@ -1,0 +1,21 @@
+
+{
+  "variants": {
+    "facing=north,has_zombie=false,has_villager=false": { "model": "boxed:block/empty_box" },
+    "facing=south,has_zombie=false,has_villager=false": { "model": "boxed:block/empty_box", "y": 180 },
+    "facing=west,has_zombie=false,has_villager=false": { "model": "boxed:block/empty_box", "y": 270 },
+    "facing=east,has_zombie=false,has_villager=false": { "model": "boxed:block/empty_box", "y": 90 },
+    "facing=north,has_zombie=true,has_villager=false": { "model": "boxed:block/zombie_box" },
+    "facing=south,has_zombie=true,has_villager=false": { "model": "boxed:block/zombie_box", "y": 180 },
+    "facing=west,has_zombie=true,has_villager=false": { "model": "boxed:block/zombie_box", "y": 270 },
+    "facing=east,has_zombie=true,has_villager=false": { "model": "boxed:block/zombie_box", "y": 90 },
+    "facing=north,has_zombie=false,has_villager=true": { "model": "boxed:block/villager_box" },
+    "facing=south,has_zombie=false,has_villager=true": { "model": "boxed:block/villager_box", "y": 180 },
+    "facing=west,has_zombie=false,has_villager=true": { "model": "boxed:block/villager_box", "y": 270 },
+    "facing=east,has_zombie=false,has_villager=true": { "model": "boxed:block/villager_box", "y": 90 },
+    "facing=north,has_zombie=true,has_villager=true": { "model": "boxed:block/full_box" },
+    "facing=south,has_zombie=true,has_villager=true": { "model": "boxed:block/full_box", "y": 180 },
+    "facing=west,has_zombie=true,has_villager=true": { "model": "boxed:block/full_box", "y": 270 },
+    "facing=east,has_zombie=true,has_villager=true": { "model": "boxed:block/full_box", "y": 90 }
+  }
+}

@@ -1,0 +1,10 @@
+
+{
+  "block.boxed.empty_box": "空盒装刷铁机",
+  "block.boxed.zombie_box": "盒装刷铁机（僵尸）",
+  "block.boxed.villager_box": "盒装刷铁机（村民）",
+  "block.boxed.full_box": "盒装刷铁机",
+  "block.boxed.boxed_iron_farm": "盒装刷铁机",
+  "block.boxed.boxed_string_farm": "盒装刷线机",
+  "block.boxed.cannot_sleep": "附近有盒装刷铁机，你感到不安，无法入睡…"
+}
