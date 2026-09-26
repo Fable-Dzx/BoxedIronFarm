@@ -16,6 +16,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.EnumProperty;
@@ -99,9 +100,9 @@ public class BoxedIronFarmBlock extends BlockWithEntity {
     }
 
     @Override
-    protected void afterBreak(World world, PlayerEntity player, BlockPos pos,
-                              BlockState state, @Nullable BlockEntity blockEntity,
-                              ItemStack tool) {
+    public void afterBreak(World world, PlayerEntity player, BlockPos pos,
+                           BlockState state, @Nullable BlockEntity blockEntity,
+                           ItemStack tool) {
         super.afterBreak(world, player, pos, state, blockEntity, tool);
         if (world.isClient()) return;
 
@@ -151,16 +152,13 @@ public class BoxedIronFarmBlock extends BlockWithEntity {
     }
 
     @Override
-    protected void onStateReplaced(BlockState state, World world,
-                                    BlockPos pos, BlockState newState,
-                                    boolean moved) {
-        if (!state.isOf(newState.getBlock())) {
-            BlockEntity be = world.getBlockEntity(pos);
-            if (be instanceof BoxedIronFarmBlockEntity farm && !farm.isEmpty()) {
-                ItemScatterer.spawn(world, pos, farm);
-            }
-            super.onStateReplaced(state, world, pos, newState, moved);
+    protected void onStateReplaced(BlockState state, ServerWorld world,
+                                    BlockPos pos, boolean moved) {
+        BlockEntity be = world.getBlockEntity(pos);
+        if (be instanceof BoxedIronFarmBlockEntity farm && !farm.isEmpty()) {
+            ItemScatterer.spawn(world, pos, farm);
         }
+        super.onStateReplaced(state, world, pos, moved);
     }
 
     @Override
