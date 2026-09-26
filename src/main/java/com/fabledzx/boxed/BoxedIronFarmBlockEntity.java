@@ -1,4 +1,3 @@
-
 package com.fabledzx.boxed;
 
 import net.minecraft.block.BlockState;
@@ -29,7 +28,7 @@ public class BoxedIronFarmBlockEntity extends BlockEntity
         implements Inventory, NamedScreenHandlerFactory {
 
     private static final int INVENTORY_SIZE = 5;
-    private static final int PRODUCTION_INTERVAL = 600; // 30 秒
+    private static final int PRODUCTION_INTERVAL = 600;
     private static final int IRON_PER_PRODUCTION = 4;
 
     private final DefaultedList<ItemStack> items =
@@ -165,9 +164,9 @@ public class BoxedIronFarmBlockEntity extends BlockEntity
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
         super.readNbt(nbt, lookup);
         Inventories.readNbt(nbt, items, lookup);
-        hasZombie = nbt.getBoolean("HasZombie");
-        hasVillager = nbt.getBoolean("HasVillager");
-        tickCounter = nbt.getInt("TickCounter");
+        hasZombie = nbt.getBoolean("HasZombie", false);
+        hasVillager = nbt.getBoolean("HasVillager", false);
+        tickCounter = nbt.getInt("TickCounter", 0);
     }
 
     @Nullable
