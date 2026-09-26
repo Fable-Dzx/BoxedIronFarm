@@ -1,0 +1,18 @@
+{
+  "type": "boxedironfarm:boxed_iron_farm",
+  "pattern": [
+    "GGG",
+    "SLS",
+    "SHS"
+  ],
+  "key": {
+    "G": "minecraft:glass",
+    "S": "minecraft:cobblestone",
+    "H": "minecraft:hopper",
+    "L": "minecraft:lava_bucket"
+  },
+  "result": {
+    "id": "boxedironfarm:empty_boxed_iron_farm",
+    "count": 1
+  }
+}

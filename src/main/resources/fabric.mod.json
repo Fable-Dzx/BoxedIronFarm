@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "boxedironfarm",
+	"version": "${version}",
+	"name": "盒装刷铁机",
+	"description": "添加盒装刷铁机：空的 / 有僵尸的 / 有村民的 / 完整的盒装刷铁机。对僵尸和村民右键使用可将它们装进盒子里，完整盒装刷铁机放置后每 30 秒产出 4 个铁锭，GUI 为漏斗式 5 格容器。",
+	"authors": [
+		"Doubao"
+	],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/boxedironfarm/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.boxedironfarm.BoxedIronFarmMod"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.10",
+		"minecraft": "~1.21.5",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

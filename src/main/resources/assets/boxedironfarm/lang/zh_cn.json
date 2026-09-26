@@ -1,0 +1,8 @@
+{
+  "itemGroup.boxedironfarm": "盒装刷铁机",
+  "block.boxedironfarm.empty_boxed_iron_farm": "空的盒装刷铁机",
+  "block.boxedironfarm.zombie_boxed_iron_farm": "有僵尸的盒装刷铁机",
+  "block.boxedironfarm.villager_boxed_iron_farm": "有村民的盒装刷铁机",
+  "block.boxedironfarm.boxed_iron_farm": "盒装刷铁机",
+  "container.boxedironfarm.boxed_iron_farm": "盒装刷铁机"
+}
