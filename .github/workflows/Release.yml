@@ -1,0 +1,165 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type (仅 workflow_dispatch 时有效)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - none          # 仅构建，不发布
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      # ------------------------------------------------------------
+      # 决定是否发布 + 计算下一个版本号
+      # ------------------------------------------------------------
+      - name: Compute version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_BUMP: ${{ github.event.inputs.bump }}
+        run: |
+          set -e
+
+          # 决定 bump 类型
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            BUMP="${INPUT_BUMP:-patch}"
+          elif [ "$EVENT_NAME" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            BUMP="patch"
+          else
+            BUMP="none"
+          fi
+          echo "Bump type: $BUMP"
+
+          # 读取最新 tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "Latest tag: '${LATEST_TAG}'"
+
+          if [ -z "$LATEST_TAG" ]; then
+            CURRENT="1.0.0"
+          else
+            CURRENT="${LATEST_TAG#v}"
+          fi
+
+          if [ "$BUMP" = "none" ]; then
+            NEW_VERSION="$CURRENT"
+            PUBLISH="false"
+          else
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            MAJOR=${MAJOR:-0}; MINOR=${MINOR:-0}; PATCH=${PATCH:-0}
+            case "$BUMP" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch|*) PATCH=$((PATCH + 1)) ;;
+            esac
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            PUBLISH="true"
+          fi
+
+          echo "New version: ${NEW_VERSION}"
+          echo "Publish: ${PUBLISH}"
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${NEW_VERSION}"        >> "$GITHUB_OUTPUT"
+          echo "publish=${PUBLISH}"         >> "$GITHUB_OUTPUT"
+
+      - name: Patch gradle.properties
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          sed -i "s/^mod_version=.*/mod_version=${{ steps.version.outputs.version }}/" gradle.properties
+          grep '^mod_version' gradle.properties
+
+      # ------------------------------------------------------------
+      # 构建
+      # ------------------------------------------------------------
+      - name: Build
+        run: gradle build --no-daemon
+
+      - name: List built jars
+        run: ls -la build/libs/
+
+      # ------------------------------------------------------------
+      # 上传 artifact（所有情况都执行，PR 也能下载）
+      # ------------------------------------------------------------
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: boxed-${{ steps.version.outputs.version }}
+          path: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
+          if-no-files-found: error
+          retention-days: 30
+
+      # ------------------------------------------------------------
+      # 发布 Release（仅 push main / workflow_dispatch bump≠none）
+      # ------------------------------------------------------------
+      - name: Create GitHub Release
+        if: steps.version.outputs.publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Boxed ${{ steps.version.outputs.tag }}"
+          body: |
+            ## Boxed ${{ steps.version.outputs.tag }}
+
+            自动构建产物，适用于 **Minecraft 1.21.5 + Fabric**。
+
+            ### 依赖
+            - Fabric Loader ≥ 0.19.3
+            - Fabric API
+            - Java 21
+
+            ### 安装
+            1. 下载 `boxed-${{ steps.version.outputs.version }}.jar`
+            2. 放入 `.minecraft/mods/`
+            3. 确保已安装 Fabric API
+
+            ### 包含内容
+            - 盒装刷铁机（空 / 僵尸 / 村民 / 完整）
+            - 盒装刷线机
+            - 精准采集保留状态、普通破坏掉落空盒
+            - 8 格内阻止睡眠
+          files: |
+            build/libs/boxed-${{ steps.version.outputs.version }}.jar
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
