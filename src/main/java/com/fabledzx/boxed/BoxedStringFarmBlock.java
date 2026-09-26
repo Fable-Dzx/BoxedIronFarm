@@ -11,6 +11,7 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.Properties;
@@ -77,16 +78,13 @@ public class BoxedStringFarmBlock extends BlockWithEntity {
     }
 
     @Override
-    protected void onStateReplaced(BlockState state, World world,
-                                    BlockPos pos, BlockState newState,
-                                    boolean moved) {
-        if (!state.isOf(newState.getBlock())) {
-            BlockEntity be = world.getBlockEntity(pos);
-            if (be instanceof BoxedStringFarmBlockEntity farm && !farm.isEmpty()) {
-                ItemScatterer.spawn(world, pos, farm);
-            }
-            super.onStateReplaced(state, world, pos, newState, moved);
+    protected void onStateReplaced(BlockState state, ServerWorld world,
+                                    BlockPos pos, boolean moved) {
+        BlockEntity be = world.getBlockEntity(pos);
+        if (be instanceof BoxedStringFarmBlockEntity farm && !farm.isEmpty()) {
+            ItemScatterer.spawn(world, pos, farm);
         }
+        super.onStateReplaced(state, world, pos, moved);
     }
 
     @Override
