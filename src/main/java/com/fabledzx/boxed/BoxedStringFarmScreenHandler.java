@@ -1,4 +1,3 @@
-
 package com.fabledzx.boxed;
 
 import net.minecraft.entity.player.PlayerEntity;

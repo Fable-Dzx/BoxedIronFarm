@@ -1,18 +1,19 @@
-
 package com.fabledzx.boxed;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.BaseEntityBlock;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
-import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ItemScatterer;
@@ -22,12 +23,12 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class BoxedStringFarmBlock extends BaseEntityBlock {
+public class BoxedStringFarmBlock extends BlockWithEntity {
     public static final MapCodec<BoxedStringFarmBlock> CODEC =
         createCodec(BoxedStringFarmBlock::new);
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = Properties.HORIZONTAL_FACING;
 
-    public BoxedStringFarmBlock(Settings settings) {
+    public BoxedStringFarmBlock(AbstractBlock.Settings settings) {
         super(settings);
         setDefaultState(getStateManager().getDefaultState().with(FACING, Direction.NORTH));
     }
@@ -59,7 +60,7 @@ public class BoxedStringFarmBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected MapCodec<? extends BaseEntityBlock> getCodec() {
+    protected MapCodec<? extends BlockWithEntity> getCodec() {
         return CODEC;
     }
 
@@ -77,16 +78,13 @@ public class BoxedStringFarmBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected void onStateReplaced(BlockState state, World world,
-                                    BlockPos pos, BlockState newState,
-                                    boolean moved) {
-        if (!state.isOf(newState.getBlock())) {
-            BlockEntity be = world.getBlockEntity(pos);
-            if (be instanceof BoxedStringFarmBlockEntity farm && !farm.isEmpty()) {
-                ItemScatterer.spawn(world, pos, farm);
-            }
-            super.onStateReplaced(state, world, pos, newState, moved);
+    protected void onStateReplaced(BlockState state, ServerWorld world,
+                                    BlockPos pos, boolean moved) {
+        BlockEntity be = world.getBlockEntity(pos);
+        if (be instanceof BoxedStringFarmBlockEntity farm && !farm.isEmpty()) {
+            ItemScatterer.spawn(world, pos, farm);
         }
+        super.onStateReplaced(state, world, pos, moved);
     }
 
     @Override

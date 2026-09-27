@@ -1,11 +1,11 @@
-
 package com.fabledzx.boxed;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.BaseEntityBlock;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
@@ -16,9 +16,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ItemScatterer;
@@ -28,14 +29,14 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class BoxedIronFarmBlock extends BaseEntityBlock {
+public class BoxedIronFarmBlock extends BlockWithEntity {
     public static final MapCodec<BoxedIronFarmBlock> CODEC =
         createCodec(BoxedIronFarmBlock::new);
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = Properties.HORIZONTAL_FACING;
     public static final BooleanProperty HAS_ZOMBIE = BooleanProperty.of("has_zombie");
     public static final BooleanProperty HAS_VILLAGER = BooleanProperty.of("has_villager");
 
-    public BoxedIronFarmBlock(Settings settings) {
+    public BoxedIronFarmBlock(AbstractBlock.Settings settings) {
         super(settings);
         setDefaultState(getStateManager().getDefaultState()
             .with(FACING, Direction.NORTH)
@@ -57,8 +58,8 @@ public class BoxedIronFarmBlock extends BaseEntityBlock {
         NbtComponent custom = stack.getOrDefault(
             DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT);
         NbtCompound nbt = custom.copyNbt();
-        if (nbt.getBoolean("HasZombie")) state = state.with(HAS_ZOMBIE, true);
-        if (nbt.getBoolean("HasVillager")) state = state.with(HAS_VILLAGER, true);
+        if (nbt.getBoolean("HasZombie", false)) state = state.with(HAS_ZOMBIE, true);
+        if (nbt.getBoolean("HasVillager", false)) state = state.with(HAS_VILLAGER, true);
         return state;
     }
 
@@ -81,7 +82,7 @@ public class BoxedIronFarmBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected MapCodec<? extends BaseEntityBlock> getCodec() {
+    protected MapCodec<? extends BlockWithEntity> getCodec() {
         return CODEC;
     }
 
@@ -99,9 +100,9 @@ public class BoxedIronFarmBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected void afterBreak(World world, PlayerEntity player, BlockPos pos,
-                              BlockState state, @Nullable BlockEntity blockEntity,
-                              ItemStack tool) {
+    public void afterBreak(World world, PlayerEntity player, BlockPos pos,
+                           BlockState state, @Nullable BlockEntity blockEntity,
+                           ItemStack tool) {
         super.afterBreak(world, player, pos, state, blockEntity, tool);
         if (world.isClient()) return;
 
@@ -151,16 +152,13 @@ public class BoxedIronFarmBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected void onStateReplaced(BlockState state, World world,
-                                    BlockPos pos, BlockState newState,
-                                    boolean moved) {
-        if (!state.isOf(newState.getBlock())) {
-            BlockEntity be = world.getBlockEntity(pos);
-            if (be instanceof BoxedIronFarmBlockEntity farm && !farm.isEmpty()) {
-                ItemScatterer.spawn(world, pos, farm);
-            }
-            super.onStateReplaced(state, world, pos, newState, moved);
+    protected void onStateReplaced(BlockState state, ServerWorld world,
+                                    BlockPos pos, boolean moved) {
+        BlockEntity be = world.getBlockEntity(pos);
+        if (be instanceof BoxedIronFarmBlockEntity farm && !farm.isEmpty()) {
+            ItemScatterer.spawn(world, pos, farm);
         }
+        super.onStateReplaced(state, world, pos, moved);
     }
 
     @Override

@@ -1,4 +1,3 @@
-
 package com.fabledzx.boxed;
 
 import net.minecraft.block.BlockState;
@@ -29,7 +28,7 @@ public class BoxedIronFarmBlockEntity extends BlockEntity
         implements Inventory, NamedScreenHandlerFactory {
 
     private static final int INVENTORY_SIZE = 5;
-    private static final int PRODUCTION_INTERVAL = 600; // 30 秒
+    private static final int PRODUCTION_INTERVAL = 600;
     private static final int IRON_PER_PRODUCTION = 4;
 
     private final DefaultedList<ItemStack> items =
@@ -45,11 +44,14 @@ public class BoxedIronFarmBlockEntity extends BlockEntity
     public void tick(World world, BlockPos pos, BlockState state) {
         if (world.isClient()) return;
 
-        if (hasZombie != state.get(BoxedIronFarmBlock.HAS_ZOMBIE)
-            || hasVillager != state.get(BoxedIronFarmBlock.HAS_VILLAGER)) {
-            world.setBlockState(pos, state
-                .with(BoxedIronFarmBlock.HAS_ZOMBIE, hasZombie)
-                .with(BoxedIronFarmBlock.HAS_VILLAGER, hasVillager));
+        // 方块状态是“装了谁”的唯一权威（放置时由物品 NBT 决定），
+        // 方块实体只需跟随方块状态，避免把初始 false 覆盖回方块状态导致永不产铁。
+        boolean z = state.get(BoxedIronFarmBlock.HAS_ZOMBIE);
+        boolean v = state.get(BoxedIronFarmBlock.HAS_VILLAGER);
+        if (hasZombie != z || hasVillager != v) {
+            hasZombie = z;
+            hasVillager = v;
+            markDirty();
         }
 
         if (!hasZombie || !hasVillager) return;
@@ -165,9 +167,9 @@ public class BoxedIronFarmBlockEntity extends BlockEntity
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
         super.readNbt(nbt, lookup);
         Inventories.readNbt(nbt, items, lookup);
-        hasZombie = nbt.getBoolean("HasZombie");
-        hasVillager = nbt.getBoolean("HasVillager");
-        tickCounter = nbt.getInt("TickCounter");
+        hasZombie = nbt.getBoolean("HasZombie", false);
+        hasVillager = nbt.getBoolean("HasVillager", false);
+        tickCounter = nbt.getInt("TickCounter", 0);
     }
 
     @Nullable
